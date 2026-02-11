@@ -8,17 +8,19 @@ Projekt je razvijen korištenjem Pythona (platforme: Google Collabratory i Micro
 
 ## Linkovi:
 - Deployeana aplikacija (Streamlit): https://ruapstrokeproject-yqxutssralzut39nwzvgtb.streamlit.app/
-- Demo video: https://streamable.com/p3nkap
+- Demo video za deployanu aplikaciju: https://streamable.com/p3nkap
+- Demo video za lokalnu aplikaciju: https://streamable.com/qdl13a
 
 
 ## Tehnologije i alati:
 Projekt je razvijen korištenjem sljedećih alata i biblioteka:
-- Python
+- python
 - pandas, numpy
 - matplotlib, seaborn
 - scipy, statsmodels
 - scikit-learn
-- Streamlit
+- streamlit
+- fastapi
 
 
 ## Kratki pregled
@@ -58,7 +60,7 @@ Klonirati repozitorij:
 Kreirati i aktivirati virtualno okruženje:
 <pre>
   python -m venv venv
-  venv\Scripts\activate
+  source venv\Scripts\activate
 </pre>
 
 Instalirati ovisnosti:
@@ -66,7 +68,14 @@ Instalirati ovisnosti:
   pip install -r requirements.txt
 </pre>
 
+Pokrenuti API:
+<pre>
+  uvicorn API.api:app --reload --host 0.0.0.0 --port 8000
+</pre>
+
 Pokrenuti aplikaciju:
 <pre>
-  streamlit run app.py
+  streamlit run API/streamlit_app_local.py
 </pre>
+
+Aplikacija se pokreće preko *streamlit_app_local.py* python skripte jer je u njoj omogućeno korištenje remote API-a (onog kojeg ranije pokrećemo), dok *streamlit_app.py* skripta koja se koristi za hostanje na streamlit stranici koristi samo lokalni model (učitava i stvara preporuku, a ne šalje HTTP metodu na remote API)
