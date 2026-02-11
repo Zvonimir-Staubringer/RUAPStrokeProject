@@ -6,6 +6,7 @@ import os
 
 MODEL_PATH = os.path.join("model", "stroke_prediction_model.pkl")
 ENCODERS_PATH = os.path.join("model", "stroke_encoders.pkl")
+FIXED_THRESHOLD = 0.75
 
 @st.cache_resource
 def load_model():
@@ -23,7 +24,7 @@ def load_model():
 model, encoders = load_model()
 
 st.title("Stroke Risk Estimator")
-st.write("Enter patient data below and press Predict. Columns match the training features.")
+st.write("Enter patient data below and press Predict. The model will estimate the probability of stroke risk based on the input features.")
 
 with st.form("input_form"):
     age = st.number_input("Age", min_value=0.0, max_value=120.0, value=50.0, step=1.0)
@@ -68,7 +69,6 @@ def build_feature_row():
         "smoking_status_never smoked": smoking_status == "never smoked",
         "smoking_status_smokes": smoking_status == "smokes"
     }
-    # ensure order
     return pd.DataFrame([[row[c] for c in feature_columns]], columns=feature_columns)
 
 if submit:
@@ -85,15 +85,15 @@ if submit:
             st.session_state['stroke_prob'] = None
             st.write("Predicted class (no probability available):", int(preds[0]))
 
-# Render slider and prediction outside the form, using session_state so changes persist
+# Display results using fixed threshold
 if 'stroke_prob' in st.session_state and st.session_state['stroke_prob'] is not None:
     stroke_prob = st.session_state['stroke_prob']
-    threshold = st.slider("Decision threshold", min_value=0.0, max_value=1.0, value=0.5, step=0.01, key="threshold")
+    threshold = FIXED_THRESHOLD
     predicted = int(stroke_prob >= threshold)
 
     st.subheader("Prediction")
     st.write(f"Predicted stroke risk probability: **{stroke_prob:.3f}**")
-    st.write(f"With threshold = **{threshold:.2f}** → Predicted class: **{predicted}**")
+    st.write(f"Using fixed threshold = **{threshold:.2f}** → Predicted class: **{predicted}**")
     if predicted == 1:
         st.warning("Model indicates elevated stroke risk — consider further clinical evaluation.")
     else:
@@ -101,3 +101,4 @@ if 'stroke_prob' in st.session_state and st.session_state['stroke_prob'] is not 
 
     if st.button("Clear prediction"):
         del st.session_state['stroke_prob']
+        st.experimental_rerun()
