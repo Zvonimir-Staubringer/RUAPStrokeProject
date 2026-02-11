@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import os
 from sklearn.metrics import roc_auc_score, confusion_matrix, classification_report
+import requests
 
 MODEL_PATH = os.path.join("model", "stroke_prediction_model.pkl")
 ENCODERS_PATH = os.path.join("model", "stroke_encoders.pkl")
@@ -103,20 +104,49 @@ if page == "Predict":
 
         submit = st.form_submit_button("Predict")
 
+    use_api = st.checkbox("Use remote API for prediction", value=False)
+    api_url = st.text_input("API base URL", value="http://localhost:8000") if use_api else None
+
     if submit:
-        if model is None:
-            st.error(f"Model not found at `{MODEL_PATH}`. Please make sure the trained model is available.")
-        else:
-            X = build_feature_row_from_inputs(age, hypertension, heart_disease, avg_glucose_level, bmi,
-                                              gender, ever_married, work_type, residence, smoking_status)
-            X = X.astype({c: int for c in X.select_dtypes(include=['bool']).columns})
+        X = build_feature_row_from_inputs(age, hypertension, heart_disease, avg_glucose_level, bmi,
+                                          gender, ever_married, work_type, residence, smoking_status)
+        X = X.astype({c: int for c in X.select_dtypes(include=['bool']).columns})
+
+        if use_api and api_url:
+            # Prepare payload from the first row
+            row = X.iloc[0].to_dict()
+            # Convert numpy scalar types to native Python types
+            for k, v in list(row.items()):
+                try:
+                    if hasattr(v, 'item'):
+                        row[k] = v.item()
+                except Exception:
+                    pass
+
+            payload = {"data": row}
             try:
-                probs = model.predict_proba(X)[:, 1]
-                st.session_state['stroke_prob'] = float(probs[0])
-            except Exception:
-                preds = model.predict(X)
-                st.session_state['stroke_prob'] = None
-                st.write("Predicted class (no probability available):", int(preds[0]))
+                resp = requests.post(f"{api_url.rstrip('/')}/predict", json=payload, timeout=10)
+                if resp.status_code == 200:
+                    j = resp.json()
+                    st.session_state['stroke_prob'] = j.get('stroke_prob')
+                    if st.session_state['stroke_prob'] is None and 'prediction' in j:
+                        st.session_state['stroke_prob'] = None
+                        st.write("Predicted class (API returned class only):", int(j.get('prediction')))
+                else:
+                    st.error(f"API request failed ({resp.status_code}): {resp.text}")
+            except Exception as e:
+                st.error(f"API request error: {e}")
+        else:
+            if model is None:
+                st.error(f"Model not found at `{MODEL_PATH}`. Please make sure the trained model is available.")
+            else:
+                try:
+                    probs = model.predict_proba(X)[:, 1]
+                    st.session_state['stroke_prob'] = float(probs[0])
+                except Exception:
+                    preds = model.predict(X)
+                    st.session_state['stroke_prob'] = None
+                    st.write("Predicted class (no probability available):", int(preds[0]))
 
     if 'stroke_prob' in st.session_state and st.session_state['stroke_prob'] is not None:
         stroke_prob = st.session_state['stroke_prob']
