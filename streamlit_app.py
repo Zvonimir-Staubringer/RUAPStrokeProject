@@ -72,11 +72,10 @@ def show_eda_image(filename, title=None, interpretation=None):
     path = os.path.join(EDA_DIR, filename)
     if os.path.exists(path):
         if title:
-            st.subheader(title)
+            st.write(f"*{title}*")
         st.image(path, use_column_width=True)
         if interpretation:
-            st.markdown(f"**Interpretation:** {interpretation}")
-        st.write("---")
+            st.markdown(f"{interpretation}")
     else:
         st.info(f"EDA image not found: {filename}")
 
@@ -119,7 +118,6 @@ if page == "Predict":
                 st.session_state['stroke_prob'] = None
                 st.write("Predicted class (no probability available):", int(preds[0]))
 
-    # Display result using fixed threshold (if available)
     if 'stroke_prob' in st.session_state and st.session_state['stroke_prob'] is not None:
         stroke_prob = st.session_state['stroke_prob']
         predicted = int(stroke_prob >= FIXED_THRESHOLD)
@@ -157,64 +155,64 @@ if page == "Dataset & Model":
     if not os.path.isdir(EDA_DIR):
         st.info(f"No EDA images found in `{EDA_DIR}`. Run `DescriptiveStatistics.py` to generate them.")
     else:
-        # Provide prioritized displays with short interpretations
+        # Numeričke vizualizacije i interpretacije
         show_eda_image("correlation_matrix.png",
                        "Correlation Matrix",
-                       "Shows pairwise Spearman correlations between numeric features and stroke. Look for features with stronger positive correlation with stroke to identify potential predictors.")
+                       "Shows Spearman correlations between numeric features and stroke. Features with stronger positive correlation with stroke are better as potential predictors.")
 
         show_eda_image("age_histogram.png",
                        "Age Distribution",
-                       "Histogram of ages in the dataset. If skewed toward older ages, age may be a strong risk factor.")
+                       "Shows distribution of ages in the dataset. It is skewed toward older ages which may indicate it as a strong risk factor.")
 
         show_eda_image("age_boxplot.png",
                        "Age Boxplot",
-                       "Boxplot shows median and spread; check for outliers and skew.")
+                       "Shows the median and the spread of age data.")
 
         show_eda_image("bmi_histogram.png",
                        "BMI Distribution",
-                       "Distribution of BMI values; elevated BMI can correlate with stroke risk in some cohorts.")
+                       "Shows distribution of BMI values. It is visible that BMI has a long tail and outliers which may affect modeling.")
 
         show_eda_image("bmi_boxplot.png",
                        "BMI Boxplot",
-                       "Boxplot highlights outliers and spread in BMI data; missing BMI values were previously dropped in EDA.")
+                       "Shows outliers and spread in BMI data.")
 
-        # Categorical counts and interpretations
+        # Kategorijske vizualizacije i interpretacije
         show_eda_image("hypertension_countplot.png",
                        "Hypertension Count",
-                       "Counts of patients with/without hypertension. Hypertension is a known stroke risk factor — observe its prevalence.")
+                       "Shows counts of patients with/without hypertension. Hypertension is a known stroke risk factor, so this distribution is important to understand.")
 
         show_eda_image("heart_disease_countplot.png",
                        "Heart Disease Count",
-                       "Counts of heart disease presence. Presence of heart disease increases stroke risk; note proportions.")
+                       "Shows counts of heart disease presence. Presence of heart disease increases stroke risk.")
 
         show_eda_image("ever_married_countplot.png",
                        "Marital Status Distribution",
-                       "Shows distribution of marital status categories — useful for demographic context, not causal by itself.")
+                       "Shows distribution of marital status categories, useful for demographic context.")
 
         show_eda_image("smoking_status_countplot.png",
                        "Smoking Status Distribution",
-                       "Distribution of smoking categories; smoking is a risk factor for cardiovascular events including stroke.")
+                       "Shows distribution of smoking categories, smoking is a risk factor for cardiovascular issues which includes stroke.")
 
-        # Stroke-specific visualizations
+        # Vizualizacije specifične za pacijente sa strokeom i interpretacije
         show_eda_image("age_distribution_stroke_patients.png",
                        "Age Distribution of Stroke Patients",
-                       "KDE of ages for stroke patients — helps compare with overall age distribution to see if stroke skews older.")
+                       "Shows distribution of ages for stroke patients, helps compare with overall age distribution to see how stroke patients skew.")
 
         show_eda_image("bmi_distribution_stroke_patients.png",
                        "BMI Distribution of Stroke Patients",
-                       "KDE of BMI for stroke patients — compare with overall BMI to spot differences.")
-
-        # If there are other files, list them
-        other_files = [f for f in os.listdir(EDA_DIR) if f.lower().endswith((".png", ".jpg", ".jpeg"))]
-        shown = {"correlation_matrix.png", "age_histogram.png", "age_boxplot.png", "bmi_histogram.png",
-                 "bmi_boxplot.png", "hypertension_countplot.png", "heart_disease_countplot.png",
-                 "ever_married_countplot.png", "smoking_status_countplot.png",
-                 "age_distribution_stroke_patients.png", "bmi_distribution_stroke_patients.png"}
-        extras = [f for f in other_files if f not in shown]
-        if extras:
-            st.subheader("Other EDA images")
-            for fn in extras:
-                show_eda_image(fn, title=fn, interpretation="Additional EDA image.")
+                       "Shows distribution of BMI for stroke patients.")
+        
+        show_eda_image("hypertension_countplot_stroke_patients.png",
+                       "Hypertension Count in Stroke Patients",
+                       "Shows how many stroke patients had hypertension, which is a key risk factor.")
+        
+        show_eda_image("heart_disease_countplot_stroke_patients.png",
+                       "Heart Disease Count in Stroke Patients",
+                       "Shows how many stroke patients had heart disease, which is a key risk factor.")
+        
+        show_eda_image("ever_married_countplot_stroke_patients.png",
+                       "Marital Status in Stroke Patients",
+                       "Shows marital status distribution among stroke patients, may provide demographic insights.")
 
     st.header("Model")
     if model is None:
