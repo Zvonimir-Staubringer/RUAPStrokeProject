@@ -8,7 +8,7 @@ from sklearn.metrics import roc_auc_score, confusion_matrix, classification_repo
 MODEL_PATH = os.path.join("model", "stroke_prediction_model.pkl")
 ENCODERS_PATH = os.path.join("model", "stroke_encoders.pkl")
 DATA_PATH = "stroke_prepared_with_outliers.csv"
-EDA_DIR = os.path("EDAoutput")
+EDA_DIR = os.path.join("", "EDAoutput")
 FIXED_THRESHOLD = 0.75
 
 @st.cache_resource
