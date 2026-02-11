@@ -69,7 +69,12 @@ def build_feature_row_from_inputs(age, hypertension, heart_disease, avg_glucose_
 
 if page == "Predict":
     st.title("Stroke Risk Estimator")
-    st.write("Enter patient data below and press Predict. The app uses a fixed decision threshold of 0.75.")
+    st.markdown("""
+    This application uses **Logistic Regression model** trained on stroke patient data.
+    
+    The model takes patient information as input and predicts the **probability of stroke risk**.
+    """)
+    st.write("Enter patient data below and press Predict. The app will then display the predicted stroke risk probability.")
 
     with st.form("input_form"):
         age = st.number_input("Age", min_value=0.0, max_value=120.0, value=50.0, step=1.0)
