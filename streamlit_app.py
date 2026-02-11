@@ -202,15 +202,15 @@ if page == "Dataset & Model":
                        "BMI Distribution of Stroke Patients",
                        "Shows distribution of BMI for stroke patients.")
         
-        show_eda_image("hypertension_countplot_stroke_patients.png",
+        show_eda_image("hypertension_stroke_patients.png",
                        "Hypertension Count in Stroke Patients",
                        "Shows how many stroke patients had hypertension, which is a key risk factor.")
         
-        show_eda_image("heart_disease_countplot_stroke_patients.png",
+        show_eda_image("heart_disease_stroke_patients.png",
                        "Heart Disease Count in Stroke Patients",
                        "Shows how many stroke patients had heart disease, which is a key risk factor.")
         
-        show_eda_image("ever_married_countplot_stroke_patients.png",
+        show_eda_image("ever_married_stroke_patients.png",
                        "Marital Status in Stroke Patients",
                        "Shows marital status distribution among stroke patients, may provide demographic insights.")
 
