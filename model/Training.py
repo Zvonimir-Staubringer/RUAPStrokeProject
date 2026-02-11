@@ -75,9 +75,9 @@ for name, m in models.items():
     print(f"{name}: {acc:.4f}")
 
 
-# Train Random Forest model for stroke prediction with balanced class weights
+# Train Logistic Regression model for stroke prediction with balanced class weights
 # class_weight='balanced' handles the class imbalance in the dataset
-model = RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced')
+model = LogisticRegression(max_iter=2000, random_state=42, class_weight='balanced')
 model.fit(X_train, y_train)
 
 # Evaluate model
@@ -194,82 +194,3 @@ plt.legend()
 plt.grid(True, alpha=0.3)
 plt.savefig("roc_curve.png")
 plt.close()
-
-# Visualization: Age distribution of patients
-plt.figure(figsize=(10, 6))
-plt.hist(df["age"], bins=20, edgecolor='black', alpha=0.7, color='skyblue')
-plt.title("Distribucija starosti pacijenata")
-plt.xlabel("Starost (године)")
-plt.ylabel("Broj pacijenata")
-plt.grid(axis='y', alpha=0.3)
-plt.savefig("age_distribution.png")
-plt.close()
-
-# Visualization: Stroke distribution
-plt.figure(figsize=(8, 6))
-df["stroke"].value_counts().plot(kind="bar", color=['green', 'red'], alpha=0.7, edgecolor='black')
-plt.title("Distribucija moždanog udara")
-plt.xticks([0, 1], ["Bez moždanog udara", "Moždani udar"], rotation=0)
-plt.ylabel("Broj pacijenata")
-plt.grid(axis='y', alpha=0.3)
-plt.savefig("stroke_distribution.png")
-plt.close()
-
-# Visualization: Hypertension and heart disease by stroke status
-plt.figure(figsize=(12, 5))
-plt.subplot(1, 2, 1)
-sns.countplot(x="hypertension", hue="stroke", data=df, palette=['green', 'red'])
-plt.title("Hipertenzija i moždani udar")
-plt.xticks([0, 1], ["Nema", "Ima"])
-plt.xlabel("Hipertenzija")
-plt.legend(["Bez moždanog udara", "Moždani udar"], loc='upper right')
-
-plt.subplot(1, 2, 2)
-sns.countplot(x="heart_disease", hue="stroke", data=df, palette=['green', 'red'])
-plt.title("Bolest srca i moždani udar")
-plt.xticks([0, 1], ["Nema", "Ima"])
-plt.xlabel("Bolest srca")
-plt.legend(["Bez moždanog udara", "Moždani udar"], loc='upper right')
-plt.tight_layout()
-plt.savefig("health_conditions_by_stroke.png")
-plt.close()
-
-# Visualization: Age distribution by stroke status
-plt.figure(figsize=(10, 6))
-sns.boxplot(x="stroke", y="age", data=df, palette=['green', 'red'])
-plt.xticks([0, 1], ["Bez moždanog udara", "Moždani udar"])
-plt.title("Starost pacijenata prema statusu moždanog udara")
-plt.ylabel("Starost (godine)")
-plt.grid(axis='y', alpha=0.3)
-plt.savefig("age_by_stroke.png")
-plt.close()
-
-# Visualization: Average glucose levels and BMI by stroke status
-plt.figure(figsize=(12, 5))
-plt.subplot(1, 2, 1)
-sns.boxplot(x="stroke", y="avg_glucose_level", data=df, palette=['green', 'red'])
-plt.xticks([0, 1], ["Bez moždanog udara", "Moždani udar"])
-plt.title("Prosječna razina glukoze po statusu")
-plt.ylabel("Prosječna razina glukoze")
-
-plt.subplot(1, 2, 2)
-sns.boxplot(x="stroke", y="bmi", data=df, palette=['green', 'red'])
-plt.xticks([0, 1], ["Bez moždanog udara", "Moždani udar"])
-plt.title("BMI po statusu moždanog udara")
-plt.ylabel("BMI")
-plt.tight_layout()
-plt.savefig("glucose_bmi_by_stroke.png")
-plt.close()
-
-# Visualization: Correlation matrix
-corr = df.corr(numeric_only=True)
-plt.figure(figsize=(10, 8))
-sns.heatmap(corr, annot=True, cmap="coolwarm", fmt='.2f', cbar_kws={'label': 'Korelacija'})
-plt.title("Korelacijska matrica - Stroke Dataset")
-plt.tight_layout()
-plt.savefig("correlation_matrix.png")
-plt.close()
-
-print("\n" + "="*50)
-print("Sve vizualizacije su spremljene u radni direktorij!")
-print("="*50)
