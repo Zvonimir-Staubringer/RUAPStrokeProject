@@ -73,30 +73,31 @@ def build_feature_row():
 
 if submit:
     if model is None:
-        st.error(f"Model not found at `{MODEL_PATH}`. Please run training and ensure the model file exists.")
+        st.error(f"Model not found at {MODEL_PATH}.")
     else:
         X = build_feature_row()
-        # convert booleans to ints to match training encoding
         X = X.astype({c: int for c in X.select_dtypes(include=['bool']).columns})
         try:
             probs = model.predict_proba(X)[:, 1]
+            st.session_state['stroke_prob'] = float(probs[0])
         except Exception:
-            # some classifiers might not implement predict_proba
             preds = model.predict(X)
-            prob = float(preds[0])
-            st.write("Predicted class:", prob)
-            st.stop()
+            st.session_state['stroke_prob'] = None
+            st.write("Predicted class (no probability available):", int(preds[0]))
 
-        stroke_prob = float(probs[0])
-        threshold = st.slider("Decision threshold", min_value=0.0, max_value=1.0, value=0.5, step=0.01)
-        predicted = int(stroke_prob >= threshold)
+# Render slider and prediction outside the form, using session_state so changes persist
+if 'stroke_prob' in st.session_state and st.session_state['stroke_prob'] is not None:
+    stroke_prob = st.session_state['stroke_prob']
+    threshold = st.slider("Decision threshold", min_value=0.0, max_value=1.0, value=0.5, step=0.01, key="threshold")
+    predicted = int(stroke_prob >= threshold)
 
-        st.subheader("Prediction")
-        st.write(f"Predicted stroke risk probability: **{stroke_prob:.3f}**")
-        st.write(f"With threshold = **{threshold:.2f}** → Predicted class: **{predicted}**")
-        if predicted == 1:
-            st.warning("Model indicates elevated stroke risk — consider further clinical evaluation.")
-        else:
-            st.success("Model indicates low stroke risk with given inputs.")
-        st.write("---")
-        st.caption("Note: This tool is for demonstration and should not replace clinical judgment.")
+    st.subheader("Prediction")
+    st.write(f"Predicted stroke risk probability: **{stroke_prob:.3f}**")
+    st.write(f"With threshold = **{threshold:.2f}** → Predicted class: **{predicted}**")
+    if predicted == 1:
+        st.warning("Model indicates elevated stroke risk — consider further clinical evaluation.")
+    else:
+        st.success("Model indicates low stroke risk with given inputs.")
+
+    if st.button("Clear prediction"):
+        del st.session_state['stroke_prob']
