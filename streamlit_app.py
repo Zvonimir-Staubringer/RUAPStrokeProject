@@ -121,7 +121,6 @@ if page == "Predict":
 
         if st.button("Clear prediction"):
             del st.session_state['stroke_prob']
-            st.experimental_rerun()
 
 if page == "Dataset & Model":
     st.title("Dataset & Model Information")
