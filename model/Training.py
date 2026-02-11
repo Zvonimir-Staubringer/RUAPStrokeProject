@@ -26,7 +26,7 @@ import numpy as np
 import warnings
 warnings.filterwarnings('ignore')
 
-# Load stroke dataset
+# Učitavanje pripremljenog dataset-a (sa outliers)
 df = pd.read_csv(r"D:\RUAPStrokeProject\stroke_prepared_with_outliers.csv")
 
 print("Dataset informacije:")
@@ -34,7 +34,7 @@ print(f"Ukupno primjera: {len(df)}")
 print(f"\nDistribucija ciljne klase (stroke):")
 print(df['stroke'].value_counts())
 print(f"\nOdnos klasa: {df['stroke'].value_counts()[0]} (nema udara) vs {df['stroke'].value_counts()[1]} (udar)")
-print(f"Procenat sa moždanim udarom: {(df['stroke'].sum() / len(df) * 100):.2f}%")
+print(f"Postotak sa moždanim udarom: {(df['stroke'].sum() / len(df) * 100):.2f}%")
 
 # Prepare features and target
 X = df.drop(columns=['stroke'])
@@ -47,8 +47,7 @@ for col in X.select_dtypes(include=['object', 'category']).columns:
     X[col] = le.fit_transform(X[col])
     label_encoders[col] = le
 
-# Split data into training and testing sets with stratified split
-# This ensures both train and test sets have similar class distribution
+# Razdvajanje na trening i test setove (80% trening, 20% test, stratificirano po cilju)
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
@@ -58,7 +57,7 @@ print(f"Test set: {len(X_test)} primjera")
 print(f"Procenat sa udarom u treningu: {(y_train.sum() / len(y_train) * 100):.2f}%")
 print(f"Procenat sa udarom u testu: {(y_test.sum() / len(y_test) * 100):.2f}%")
 
-# Define models for stroke prediction
+# Modeli za usporedbu
 models = {
     "Logistic Regression": LogisticRegression(max_iter=1000),
     "Decision Tree": DecisionTreeClassifier(random_state=42),
@@ -66,7 +65,7 @@ models = {
     "KNN": KNeighborsClassifier()
 }
 
-# Model comparison
+# Usporedba modela
 print("\nUsporedba modela za predviđanje moždanog udara:")
 for name, m in models.items():
     m.fit(X_train, y_train)
@@ -74,21 +73,29 @@ for name, m in models.items():
     acc = accuracy_score(y_test, preds)
     print(f"{name}: {acc:.4f}")
 
-
-# Train Logistic Regression model for stroke prediction with balanced class weights
-# class_weight='balanced' handles the class imbalance in the dataset
-model = LogisticRegression(max_iter=2000, random_state=42, class_weight='balanced')
+# Evaluacija modela koji imaju najbolje performanse na test setu - Random Forest
+model = RandomForestClassifier(n_estimators=400, random_state=42, class_weight='balanced')
 model.fit(X_train, y_train)
 
-# Evaluate model
 preds = model.predict(X_test)
 accuracy = accuracy_score(y_test, preds)
 print(f"\nAccuracy na test setu (default threshold=0.5): {accuracy:.4f}")
-print("Confusion matrix:\n", confusion_matrix(y_test, preds))
+print("Matrica zabune:\n", confusion_matrix(y_test, preds))
 print("\nClassification Report (default threshold=0.5):")
 print(classification_report(y_test, preds, target_names=['Bez moždanog udara', 'Moždani udar']))
 
-# Find optimal threshold for better recall (detecting stroke cases)
+cm = confusion_matrix(y_test, preds)
+plt.figure(figsize=(6, 5))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+            xticklabels=['Bez moždanog udara', 'Moždani udar'],
+            yticklabels=['Bez moždanog udara', 'Moždani udar'])
+plt.xlabel("Predviđeno")
+plt.ylabel("Stvarno")
+plt.title(f"Matrica zabune - Threshold=0.5")
+plt.savefig("output/forest_default_confusion_matrix.png")
+plt.close()
+
+# Pronalaženje optimalnog threshold-a za Random Forest model kako bi se poboljšala detekcija moždanog udara (recall)
 print("\nOptimizacija threshold vrijednosti...")
 probs = model.predict_proba(X_test)[:, 1]
 best_threshold = 0.5
@@ -104,14 +111,10 @@ for threshold in np.arange(0.1, 0.9, 0.05):
 
 print(f"Optimalni threshold: {best_threshold:.2f} (F1-score: {best_f1:.4f})")
 
-# Evaluate with optimized threshold
+# Evaluacija sa optimiziranim threshold-om
 preds_optimized = (probs >= best_threshold).astype(int)
 print(f"\nAccuracy sa optimiziranim threshold={best_threshold:.2f}: {accuracy_score(y_test, preds_optimized):.4f}")
-print("Confusion matrix sa optimiziranim threshold:\n", confusion_matrix(y_test, preds_optimized))
-print("\nClassification Report (optimizirani threshold):")
-print(classification_report(y_test, preds_optimized, target_names=['Bez moždanog udara', 'Moždani udar']))
-
-# Visualize confusion matrix with optimized threshold
+print("Matrica zabune sa optimiziranim threshold:\n", confusion_matrix(y_test, preds_optimized))
 cm = confusion_matrix(y_test, preds_optimized)
 plt.figure(figsize=(6, 5))
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
@@ -119,14 +122,83 @@ sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
             yticklabels=['Bez moždanog udara', 'Moždani udar'])
 plt.xlabel("Predviđeno")
 plt.ylabel("Stvarno")
-plt.title(f"Matrica konfuzije - Threshold={best_threshold:.2f}")
-plt.savefig("confusion_matrix.png")
+plt.title(f"Matrica zabune - Threshold={best_threshold:.2f}")
+plt.savefig("output/forest_optimised_confusion_matrix.png")
+plt.close()
+print("\nClassification Report (optimizirani threshold):")
+print(classification_report(y_test, preds_optimized, target_names=['Bez moždanog udara', 'Moždani udar']))
+
+# Treniranje i evaluacija Logistic Regression modela (imao je najbolje performanse u usporedbi modela))
+model = LogisticRegression(max_iter=2000, random_state=42, class_weight='balanced')
+model.fit(X_train, y_train)
+
+# Evaluacija modela sa default thresholdom (0.5)
+preds = model.predict(X_test)
+accuracy = accuracy_score(y_test, preds)
+print(f"\nAccuracy na test setu (default threshold=0.5): {accuracy:.4f}")
+print("Matrica zabune:\n", confusion_matrix(y_test, preds))
+print("\nClassification Report (default threshold=0.5):")
+print(classification_report(y_test, preds, target_names=['Bez moždanog udara', 'Moždani udar']))
+
+cm = confusion_matrix(y_test, preds)
+plt.figure(figsize=(6, 5))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+            xticklabels=['Bez moždanog udara', 'Moždani udar'],
+            yticklabels=['Bez moždanog udara', 'Moždani udar'])
+plt.xlabel("Predviđeno")
+plt.ylabel("Stvarno")
+plt.title(f"Matrica zabune - Threshold={best_threshold:.2f}")
+plt.savefig("output/logistic_regression_confusion_matrix.png")
 plt.close()
 
-# Feature importance analysis
-importances = model.feature_importances_
-feature_names = X.columns
-indices = importances.argsort()[::-1]
+# Pronalaženje optimalnog threshold-a za Logistic Regression model kako bi se poboljšala detekcija moždanog udara (recall)
+print("\nOptimizacija threshold vrijednosti...")
+probs = model.predict_proba(X_test)[:, 1]
+best_threshold = 0.5
+best_f1 = 0
+from sklearn.metrics import f1_score
+
+for threshold in np.arange(0.1, 0.9, 0.05):
+    y_pred_threshold = (probs >= threshold).astype(int)
+    f1 = f1_score(y_test, y_pred_threshold)
+    if f1 > best_f1:
+        best_f1 = f1
+        best_threshold = threshold
+
+print(f"Optimalni threshold: {best_threshold:.2f} (F1-score: {best_f1:.4f})")
+
+# Evaluacija sa optimiziranim threshold-om
+preds_optimized = (probs >= best_threshold).astype(int)
+print(f"\nAccuracy sa optimiziranim threshold={best_threshold:.2f}: {accuracy_score(y_test, preds_optimized):.4f}")
+print("Matrica zabune sa optimiziranim threshold:\n", confusion_matrix(y_test, preds_optimized))
+print("\nClassification Report (optimizirani threshold):")
+print(classification_report(y_test, preds_optimized, target_names=['Bez moždanog udara', 'Moždani udar']))
+
+cm = confusion_matrix(y_test, preds_optimized)
+plt.figure(figsize=(6, 5))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+            xticklabels=['Bez moždanog udara', 'Moždani udar'],
+            yticklabels=['Bez moždanog udara', 'Moždani udar'])
+plt.xlabel("Predviđeno")
+plt.ylabel("Stvarno")
+plt.title(f"Matrica zabune - Threshold={best_threshold:.2f}")
+plt.savefig("output/optimised_confusion_matrix.png")
+plt.close()
+
+# Račun važnosti značajki (feature importance)
+if hasattr(model, "feature_importances_"):
+    importances = np.array(model.feature_importances_, dtype=float)
+elif hasattr(model, "coef_"):
+    coef = np.array(model.coef_, dtype=float)
+    if coef.ndim == 1 or coef.shape[0] == 1:
+        importances = np.abs(coef.ravel())
+    else:
+        importances = np.mean(np.abs(coef), axis=0)
+else:
+    importances = np.zeros(X.shape[1], dtype=float)
+
+feature_names = np.array(X.columns)
+indices = np.argsort(importances)[::-1]
 
 plt.figure(figsize=(10, 6))
 plt.title("Važnost značajki za predviđanje moždanog udara")
@@ -134,15 +206,15 @@ plt.bar(range(len(importances)), importances[indices])
 plt.xticks(range(len(importances)), feature_names[indices], rotation=45, ha='right')
 plt.ylabel("Važnost")
 plt.tight_layout()
-plt.savefig("feature_importance.png")
+plt.savefig("output/feature_importance.png")
 plt.close()
 
-# Save trained model and encoders
-joblib.dump(model, "stroke_prediction_model.pkl")
-joblib.dump(label_encoders, "stroke_encoders.pkl")
+# Spremanje modela i label encodersa za buduću upotrebu
+joblib.dump(model, "model/stroke_prediction_model.pkl")
+joblib.dump(label_encoders, "model/stroke_encoders.pkl")
 print("\nModel i encoders su spremljeni!")
 
-# Cross-validation analysis
+# Unakrsna validacija (cross-validation) za procjenu stabilnosti modela
 cv_scores = cross_val_score(model, X, y, cv=5)
 print("\n5-Fold Cross-Validation rezultati:", cv_scores)
 print("Prosječna CV accuracy:", cv_scores.mean())
@@ -154,10 +226,10 @@ plt.xlabel("Fold broj")
 plt.ylabel("Accuracy")
 plt.ylim(0.6, 1.0)
 plt.grid(True, alpha=0.3)
-plt.savefig("cross_validation.png")
+plt.savefig("output/cross_validation.png")
 plt.close()
 
-# Learning curve analysis
+# Learning curve analiza za procjenu kako model uči s više podataka
 print("\nIzračunavanje learning curve...")
 train_sizes, train_scores, test_scores = learning_curve(
     model, X, y, cv=5, scoring='accuracy',
@@ -175,10 +247,10 @@ plt.ylabel("Accuracy")
 plt.title("Learning Curve - Stroke Prediction")
 plt.legend()
 plt.grid(True, alpha=0.3)
-plt.savefig("learning_curve.png")
+plt.savefig("output/learning_curve.png")
 plt.close()
 
-# ROC Curve analysis
+# ROC krivulja analiza za procjenu performansi modela u detekciji moždanog udara
 print("Izračunavanje ROC curve...")
 probs = model.predict_proba(X_test)[:, 1]
 fpr, tpr, _ = roc_curve(y_test, probs)
@@ -192,5 +264,5 @@ plt.ylabel("True Positive Rate")
 plt.title("ROC Curve - Stroke Prediction")
 plt.legend()
 plt.grid(True, alpha=0.3)
-plt.savefig("roc_curve.png")
+plt.savefig("output/roc_curve.png")
 plt.close()
