@@ -72,7 +72,7 @@ def show_eda_image(filename, title=None, interpretation=None):
     path = os.path.join(EDA_DIR, filename)
     if os.path.exists(path):
         if title:
-            st.write(f"*{title}*")
+            st.write(f"**{title}**")
         st.image(path, use_column_width=True)
         if interpretation:
             st.markdown(f"{interpretation}")
@@ -135,22 +135,6 @@ if page == "Predict":
 
 if page == "Dataset & Model":
     st.title("Dataset & Model Information")
-
-    st.header("Dataset")
-    if df is None:
-        st.warning(f"Dataset not found at `{DATA_PATH}`.")
-    else:
-        st.write(f"Rows: **{len(df):,}**, Columns: **{df.shape[1]}**")
-        if 'stroke' in df.columns:
-            vc = df['stroke'].value_counts()
-            st.write("Class distribution (stroke):")
-            st.write(vc.to_frame(name="count"))
-            st.write(f"Percent with stroke: **{(df['stroke'].mean()*100):.2f}%**")
-        st.subheader("Preview")
-        st.dataframe(df.head(10))
-        st.subheader("Numeric summary")
-        st.dataframe(df.describe().T)
-
     st.header("Exploratory Data Analysis (graphs)")
     if not os.path.isdir(EDA_DIR):
         st.info(f"No EDA images found in `{EDA_DIR}`. Run `DescriptiveStatistics.py` to generate them.")
