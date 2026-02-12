@@ -1,5 +1,7 @@
 # RUAPStrokeProject
 
+Ovaj seminarski rad su izradili studenti Ferit-a **Zvonimir Štaubringer** i **Dorotea Tomić**
+
 ## Opis projekta
 Aplikacija i model strojnog učenja za predviđanje rizika moždanog udara na temelju zdravstvenih, demografskih i životnih karakteristika pacijenata.
 Obuhvaća cjelokupni proces analize i obrade podataka, statističke evaluacije, izgradnje prediktivnog modela te implementacije modela kroz interaktivnu web aplikaciju.
