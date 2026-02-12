@@ -36,6 +36,7 @@ Projekt je razvijen korištenjem sljedećih alata i biblioteka:
 
 ## Skup podataka
 Korišten je Stroke Prediction Dataset preuzet s Kaggle platforme (https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset)
+
 Skup sadrži 5 110 zapisa pacijenata te kombinaciju numeričkih i kategorijskih varijabli, uključujući:
 - dob
 - BMI
