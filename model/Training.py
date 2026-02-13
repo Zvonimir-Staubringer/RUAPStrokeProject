@@ -36,11 +36,11 @@ print(df['stroke'].value_counts())
 print(f"\nOdnos klasa: {df['stroke'].value_counts()[0]} (nema udara) vs {df['stroke'].value_counts()[1]} (udar)")
 print(f"Postotak sa moždanim udarom: {(df['stroke'].sum() / len(df) * 100):.2f}%")
 
-# Prepare features and target
+# Priprema podataka za modeliranje
 X = df.drop(columns=['stroke'])
 y = df['stroke']
 
-# Encode categorical variables
+# Enkodiranje kategorijskih značajki pomoću LabelEncoder-a (ako ih ima)
 label_encoders = {}
 for col in X.select_dtypes(include=['object', 'category']).columns:
     le = LabelEncoder()
@@ -52,10 +52,10 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 
-print(f"\nTrenin set: {len(X_train)} primjera")
+print(f"\nTrening set: {len(X_train)} primjera")
 print(f"Test set: {len(X_test)} primjera")
-print(f"Procenat sa udarom u treningu: {(y_train.sum() / len(y_train) * 100):.2f}%")
-print(f"Procenat sa udarom u testu: {(y_test.sum() / len(y_test) * 100):.2f}%")
+print(f"Postotak sa moždanim udarom u treningu: {(y_train.sum() / len(y_train) * 100):.2f}%")
+print(f"Postotak sa moždanim udarom u testu: {(y_test.sum() / len(y_test) * 100):.2f}%")
 
 # Modeli za usporedbu
 models = {
@@ -147,7 +147,7 @@ sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
             yticklabels=['Bez moždanog udara', 'Moždani udar'])
 plt.xlabel("Predviđeno")
 plt.ylabel("Stvarno")
-plt.title(f"Matrica zabune - Threshold={best_threshold:.2f}")
+plt.title(f"Matrica zabune - Threshold=0.5")
 plt.savefig("output/logistic_regression_confusion_matrix.png")
 plt.close()
 
